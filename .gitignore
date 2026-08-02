@@ -1,0 +1,6 @@
+cloud_storage.db
+uploads/*
+!uploads/.gitkeep
+__pycache__/
+*.pyc
+.env

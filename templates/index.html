@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudVault - Mobile-Ready Cloud Storage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Auth Overlay / Modal -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-center space-x-3 mb-6">
+                <div class="p-3 bg-blue-600 rounded-xl text-white">
+                    <i class="fa-solid fa-cloud text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold tracking-tight">CloudVault</h2>
+            </div>
+            
+            <div class="flex border-b border-slate-700 mb-6">
+                <button id="tabLogin" class="flex-1 pb-3 text-center border-b-2 border-blue-500 font-semibold text-blue-400">Login</button>
+                <button id="tabRegister" class="flex-1 pb-3 text-center border-b-2 border-transparent font-semibold text-slate-400 hover:text-slate-200">Register</button>
+            </div>
+
+            <form id="authForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Username</label>
+                    <input type="text" id="authUsername" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                    <input type="password" id="authPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <p id="authError" class="text-red-400 text-xs hidden"></p>
+                <button type="submit" id="authSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-blue-500/20 transition duration-200">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl text-white shadow-md">
+                    <i class="fa-solid fa-cloud text-xl"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">CloudVault</span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div id="userBadge" class="hidden sm:flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+                    <i class="fa-solid fa-user text-xs text-blue-400"></i>
+                    <span id="usernameDisplay" class="text-xs font-medium text-slate-300">User</span>
+                </div>
+                <button id="logoutBtn" class="text-xs text-slate-400 hover:text-red-400 font-medium px-3 py-1.5 rounded-lg border border-slate-800 hover:border-red-900/50 transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Storage & Statistics Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase text-slate-400">Total Storage Used</p>
+                        <h3 id="storageText" class="text-2xl font-bold mt-1 text-white">0 MB</h3>
+                    </div>
+                    <div class="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+                        <i class="fa-solid fa-hard-drive text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-full bg-slate-700/50 rounded-full h-2 mb-2 overflow-hidden">
+                        <div id="storageBar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-slate-400 text-right">Max Limit: 500 MB</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-6 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase text-slate-400">Stored Files</p>
+                    <h3 id="fileCountText" class="text-3xl font-bold mt-1 text-white">0</h3>
+                </div>
+                <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                    <i class="fa-solid fa-file text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-6 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase text-slate-400">Direct Download</p>
+                    <p class="text-xs text-slate-400 mt-1">Files download directly to your Mobile Storage / PC Disk.</p>
+                </div>
+                <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                    <i class="fa-solid fa-mobile-screen-button text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-blue-500/80 bg-slate-800/30 hover:bg-blue-500/5 rounded-2xl p-8 sm:p-12 text-center transition duration-300 cursor-pointer relative">
+            <input type="file" id="fileInput" multiple class="hidden">
+            <div class="space-y-4">
+                <div class="inline-flex p-4 bg-slate-800 text-blue-400 rounded-full border border-slate-700 shadow-inner">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl sm:text-4xl"></i>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-slate-200">Tap or Drag & Drop files here</h4>
+                    <p class="text-sm text-slate-400 mt-1">Supports any file type up to 500 MB</p>
+                </div>
+                <div>
+                    <button type="button" onclick="document.getElementById('fileInput').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2.5 rounded-xl shadow-lg transition">
+                        Select Files
+                    </button>
+                </div>
+            </div>
+            <!-- Upload Progress Bar Overlay -->
+            <div id="uploadProgressContainer" class="hidden absolute inset-0 bg-slate-900/90 rounded-2xl flex flex-col items-center justify-center p-6 space-y-3 backdrop-blur-sm">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500"></i>
+                <p id="uploadStatusText" class="text-sm font-medium text-slate-200">Uploading files...</p>
+                <div class="w-64 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+                    <div id="uploadProgressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File List Section -->
+        <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-folder-open text-blue-400"></i>
+                    <span>Your Cloud Files</span>
+                </h3>
+                
+                <!-- Search Filter -->
+                <div class="w-full sm:w-64 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-xs text-slate-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search files..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="text-xs uppercase bg-slate-900/60 text-slate-400 rounded-lg">
+                        <tr>
+                            <th class="px-4 py-3 rounded-l-lg">Name</th>
+                            <th class="px-4 py-3">Size</th>
+                            <th class="px-4 py-3">Uploaded</th>
+                            <th class="px-4 py-3 text-right rounded-r-lg">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileListTable" class="divide-y divide-slate-800/60">
+                        <!-- Dynamic file items -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="hidden text-center py-12">
+                    <i class="fa-solid fa-box-open text-4xl text-slate-600 mb-3"></i>
+                    <p class="text-slate-400">No files uploaded yet.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-blue-400"></i>
+        <span id="toastMessage" class="text-sm font-medium">Notification message</span>
+    </div>
+
+    <!-- External JS Logic -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
